@@ -1,29 +1,22 @@
-"""#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
-"""Builds the information extracter for extract information from baike medical webpages.
-Implement the inference/loss/training pattern for model building.
-1. inference() - Builds the model as far as required for running the network
-forward to make predictions.
-2. loss() - Adds to the inference model the layers required to generate loss.
-3. training() - Adds to the loss model the Ops required to generate and
-apply gradients.
-This file is used by the various "fully_connected_*.py" files and not meant to
-be run.
+Builds the information extracter for extract information from baike medical related webpages.
+Change inDir and outDir to parse different sources
+July 2017
 """
 import glob
 import os
 import codecs
+import errno
 import json
 import csv
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from collections import OrderedDict
 
-# extract information from webpages
 def extractInfoFromFile(inDir, fileId):
     # open local file
-    soup = BeautifulSoup(open(inDir + '/' + fileId, encoding = 'utf-8'), 'lxml')
+    with open(inDir + '/' + fileId, encoding = 'utf-8') as fp:
+        soup = BeautifulSoup(fp, 'lxml')
 
     # create a dict to store all the data being pulled from webpages
     data = OrderedDict()
@@ -52,28 +45,29 @@ def extractInfoFromFile(inDir, fileId):
     data[name][basic] = basicDict
 
     # get the contents
-    contentBoxes = soup.find_all('div', attrs={'class':'para-title level-2'})
-    for contentBox in contentBoxes:
-        contentKey = contentBox.get_text().strip('/\n').strip(name)
-        contentValues = []
-        while contentBox.find_next_sibling('div',attrs={'class':'para'}) != None:
-            contentBox = contentBox.find_next_sibling('div',attrs={'class':'para'})
-            contentValues.append(contentBox.get_text().strip('/\n').strip(name))
-            data[name][contentKey] = '\n'.join(contentValues)
-
+    content_key_boxes = soup.find_all('div', attrs={'class':'para-title level-2'})
+    for content_key_box in content_key_boxes:
+        #print(content_key_box.get_text())
+        content_key = content_key_box.get_text().strip('/\n').replace(name, "")
+        content_values = []
+        content_value_box = content_key_box.find_next_sibling('div')#,attrs={'class':'para'})
+        print(content_value_box.encode('utf-8').prettify(formatter='xml'))
+        while content_value_box != None:
+            try:
+                attrs = content_value_box.div['class']
+                print('sibling is ' + attrs)
+            except AttributeError:
+                attrs = ""
+            if attrs == u'para':
+                content_values.append(content_value_box.get_text())
+                content_value_box = content_value_box.next_sibling#('div',attrs={'class':'para'})
+            else:
+                break
+        data[name][content_key] = '\n'.join(content_values)
     return data
 
 def writeToJson(data, outDir, fileId):
-    # write data to json file
     #print(fileName)
-    """if not os.path.exists(os.path.dirname(outDir)):
-        try:
-            os.makedirs(os.path.dirname(outDir))
-        except OSError as exc: # guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise
-    """
-
     filePath = (outDir + '/' + fileId).encode('utf-8')
     with open(filePath, 'w', encoding='utf-8') as outfile:
         json_text = json.dumps(data, indent=4, ensure_ascii=False)
@@ -81,8 +75,20 @@ def writeToJson(data, outDir, fileId):
 
 if __name__ == '__main__':
     # path to baike medical pages in local folder
-    inDir = '/home/jyu/data/baikeMedical/webpages/treatment'
-    outDir = '/home/jyu/data/baikeMedical/jsonFiles/treatment'
+    inDir = '/home/jyu/data/baikeMedical/webpages/test'
+    outDir = '/home/jyu/data/baikeMedical/jsonFiles/test'
+
+   # inDir = '/home/jyu/data/baikeMedical/webpages/food'
+   # inDir = '/home/jyu/data/baikeMedical/webpages/psychological'
+   # inDir = '/home/jyu/data/baikeMedical/webpages/bioMedical'
+   # inDir = '/home/jyu/data/baikeMedical/webpages/chemical'
+
+   # outDir = '/home/jyu/data/baikeMedical/jsonFiles/food'
+   # outDir = '/home/jyu/data/baikeMedical/jsonFiles/psychological'
+   # outDir = '/home/jyu/data/baikeMedical/jsonFiles/bioMedical'
+   # outDir = '/home/jyu/data/baikeMedical/jsonFiles/chemical'
+
+    os.makedirs(outDir, exist_ok=True)
     for fileId in os.listdir(inDir):
         data = extractInfoFromFile(inDir, fileId)
         #fileName = list(data.keys())[0]

@@ -1,3 +1,5 @@
+import java.util.*;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -18,24 +20,24 @@ import java.util.Map;
 import java.net.URLDecoder;
 
 /**
- * The class is written to download web pages from baike medical categories 
- * http://baike.baidu.com/wikitag/taglist?tagId=75954
+ * The class is written to download web pages from baike medical related categories 
+ * e.g. http://baike.baidu.com/wikitag/taglist?tagId=75954
+ * Change saveDir, and tagId etc to download pages from different categories
  */
-public class MedicineCrawler {
-    //private static final Logger LOGGER = Logger.getLogger(MedicineCrawler.class);
+public class CrawlerDebug{
 
-    String urlPost = "http://%s:8080/requests";
-    public static final String saveDir = "/home/jyu/data/baikeMedical/webpages/medicineUpdated2";
+    private static final String saveDir = "/home/jyu/data/baikeMedical/webpages/disease/debug";
+    private static String tagId = "75953"; // disease "68038"; // food
+
+    private String urlPost = "http://%s:8080/requests";
+    private static int maxPageNum = 200;  // max respons page number, there are 73 pages in total for diseases in baidu baike
                        
-    public MedicineCrawler(){}
-    public MedicineCrawler(String url){
+    public CrawlerDebug(){}
+    public CrawlerDebug(String url){
         setUrlPost(url);
     }
     private static final int BUFFER_SIZE = 4096;
 
-//    public static void saveId2Name(String fileURL, String saveDir){
-
- //   }
  
     /**
      * Downloads a file from a URL
@@ -43,7 +45,7 @@ public class MedicineCrawler {
      * @param saveDir path of the directory to save the file
      * @throws IOException
      */
-    public static int downloadFile(String fileURL, String saveDir)
+    private static int downloadFile(String fileURL, String saveDir)
             throws IOException {
         URL url = new URL(fileURL);
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
@@ -69,11 +71,6 @@ public class MedicineCrawler {
                         fileURL.length());
             }
  
-            //System.out.println("Content-Type = " + contentType);
-            //System.out.println("Content-Disposition = " + disposition);
-            //System.out.println("Content-Length = " + contentLength);
-            //System.out.println("fileName = " + fileName);
- 
             // opens input stream from the HTTP connection
             InputStream inputStream = httpConn.getInputStream();
             String saveFilePath = saveDir + File.separator + fileName;
@@ -86,11 +83,9 @@ public class MedicineCrawler {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
             }
- 
             outputStream.close();
             inputStream.close();
- 
-           // System.out.println("File downloaded");
+            System.out.println("File downloaded");
         } else {
             System.out.println("No file to download. Server replied HTTP code: " + responseCode);
             return 0;
@@ -99,20 +94,16 @@ public class MedicineCrawler {
         return 1;
     }
 
-    public void setUrlPost(String urlPost) {
+    private void setUrlPost(String urlPost) {
         this.urlPost = urlPost;
     }
 
-    public void setMsgToSend(String msg) {
+    private void setMsgToSend(String msg) {
         this.msgToSend = msg;
     }
     String msgToSend = "";
 
-//    void initMsg(String fname) {
-//        msgToSend = FileUtil.readAllTexts(fname);
-
-//    }
-    public String sendPost(String msg) {
+    private String sendPost(String msg) {
         String res = "";
         msgToSend = msg;
         try {
@@ -201,95 +192,97 @@ public class MedicineCrawler {
         //LOGGER.info(response.toString());
         return response.toString();
     }
-    public static void main(String[] args) throws Exception {
-        MedicineCrawler sc = new MedicineCrawler();
-        /*
-        sc.urlPost = String.format(sc.urlPost, args[0]);
-        if (args.length >= 2 && args[1].equalsIgnoreCase("get")) {
-            if (args.length >= 3) {
-                sc.sendGet(args[2]);
-            } else {
-                //sc.sendGet(DataKey.default_bizid);
-            }
-        } else if (args.length == 2 && args[1].equalsIgnoreCase("post")) {
-            sc.sendPost();
-        } else if (args.length == 3 && args[1].equalsIgnoreCase("post")){
-            //LOGGER.info("calling with post " +args[2]);
-            String fname = args[2];
-            // "C:\\Workspace\\prservice\\wxbot_related\\java_tools\\src\\test\\postdata_questions.json";
-            String content = FileUtil.readAllTexts(fname);
-            //Map<String, Object> map = MapUtil.convertJsonToMap(content);
-            sc.msgToSend =content;
-            String res = sc.sendPost();
-            //LOGGER.info("res " + res);
-        } else {
-            //LOGGER.info("Usage: java service.MedicineCrawler get/post");
-        }
-       */ 
-        sc.setUrlPost("http://baike.baidu.com/wikitag/api/getlemmas");
-        try(PrintWriter nameIdMapFile = new PrintWriter(saveDir + "/nameIdMap.txt")){
-            // there are 73 pages in total
-            for(int pageNum = 1; pageNum < 74; pageNum++){
-                String s ="limit=100000000000&timeout=3000000&filterTags=%5B%5D&tagId=75954&fromLemma=false&contentLength=4000000000000000&page="+pageNum;
-                String res = sc.sendPost(s);
-                for(int i = 0; i < res.length()-4; i++){
-                  StringBuilder urlBuilder = new StringBuilder();
-                  if(res.substring(i, i+4).equals("http")){
-                       int j = i+4;
-                       while(res.charAt(j) != '"'){
-                           j++;
-                       }
-                       String url = res.substring(i, j);
-                       for(char c : url.toCharArray()){
-                           if(c != '\\'){
-                               urlBuilder.append(c);
-                           }
-                       }
-                       String urlsClean = urlBuilder.toString();
-                       //String resultPage = sendGet(urlClean);
-		       String[] urls = urlsClean.split("http");
-		       for(String urlClean : urls){
-                   if(urlClean == null || urlClean.isEmpty()) continue;
-                   final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-                   String urlTemp = "http"+urlClean;
-                  // Thread.sleep(3000);
-                   try{
-                       downloadFile(urlTemp, saveDir);
-                                     
-                   /*
-                    * executorService.scheduleAtFixedRate(new Runnable(){
-                       @Override
-                       public void run(){
-                           try {
-                                downloadFile(urlTemp, saveDir);
-                           }catch(Exception e){
-                               System.out.println("downloadFile failed!");
-                           }
-                       }
-                   }, 0, 30, TimeUnit.SECONDS);
-                   //executorService.scheduleAtFixedRate(App::downloadFile, 0, 1, TimeUnit.SECONDS);
-                   */
-                   String[] urlSplit = urlClean.split("/");
-                   String name = URLDecoder.decode(urlSplit[urlSplit.length - 2], "UTF-8"); 
-                   String id = urlSplit[urlSplit.length - 1]; 
-                   //System.out.println(name+" "+id); 
-                   nameIdMapFile.println(name + " " + id);
-                   }catch(Exception e){
-                       System.out.println("Can't download file: " + urlTemp);
-                   }
 
-              
-		   }
-                  // String toEncode = "";
-                 //  String encoded = URLEncoder.encode(toEncode, "UTF-8");
-                 //  System.out.println("Encoded: " + encoded);
-                  // String encoded = "%E8%89%BE%E6%BB%8B%E7%97%85";
-                   //String decoded = URLDecoder.decode(encoded, "UTF-8");
+    private static void writeToFile(List<String> strs, String filePath){
+        try(PrintWriter printWriter = new PrintWriter(filePath)){
+            for(String s : strs){
+                printWriter.println(s);
+            }
+        }catch(Exception e){
+            System.out.printf("Can't write: %s!/n", filePath);
+        }
+    }
+
+   private static List<String> getUrls(List<String> responses){
+        // process urls and write id name map file
+        List<String> urls = new LinkedList<String>();
+        for(String res : responses){
+            for(int i = 0; i < res.length()-4; i++){
+              if(res.substring(i, i+4).equals("http")){
+                   int j = i+4;
+                   while(res.charAt(j) != '"'){
+                       j++;
                    }
-                }
+                   String urlRaw = res.substring(i, j);
+                   StringBuilder urlBuilder = new StringBuilder();
+                   for(char c : urlRaw.toCharArray()){
+                       if(c != '\\'){
+                           urlBuilder.append(c);
+                        }
+                   }
+                   urls.add(urlBuilder.toString());
+              }
             }
         }
-         //Writer w = new OutputStreamWriter(new FileOutputStream("test.txt"), "UTF-8");
-         //w.close();
+        return urls;
+   }
+
+   private static List<String> getNameIds(List<String> urls){
+        List<String> nameIds = new LinkedList<String>();
+       for(String url : urls){
+           String[] urlSplit = url.split("/");
+           if(urlSplit.length < 6){
+               System.out.println(url);
+           }else{
+               String id = urlSplit[5]; 
+               try{
+                   String name = URLDecoder.decode(urlSplit[4], "UTF-8"); 
+                   //System.out.println(name+" "+id); 
+                   nameIds.add(name + " " + id);
+               }catch(Exception e){
+                   System.out.println("Can't decode url with utf8!");
+               }
+           }
+       }
+       return nameIds;
+   }
+
+   private static List<String> getPostRequestResponses(CrawlerDebug crawler, String tagId){
+        // get response from post request
+        List<String> responses = new LinkedList<String>();
+        for(int pageNum = 1; pageNum < maxPageNum; pageNum++){
+            String params = "limit=100000000000&timeout=3000000&filterTags=%5B%5D&tagId=" + tagId +"&fromLemma=false&contentLength=4000000000000000&page="+pageNum;
+            String res = crawler.sendPost(params);
+            responses.add(res);
+        }
+        return responses;
+   }
+
+    public static void main(String[] args) throws Exception {
+        CrawlerDebug crawler = new CrawlerDebug();
+        crawler.setUrlPost("http://baike.baidu.com/wikitag/api/getlemmas");
+        File directory = new File(saveDir);
+        if(!directory.exists()){
+            directory.mkdir();
+        }
+
+        List<String> responses = getPostRequestResponses(crawler, tagId);
+        List<String> urls = getUrls(responses);
+        List<String> nameIds = getNameIds(urls);
+        
+        writeToFile(responses, saveDir+"/responses.txt");
+        writeToFile(urls, saveDir+"/urls.txt");
+        writeToFile(nameIds, saveDir+"/nameIdMap.txt");
+
+        // download webpages
+        for(String url : urls){
+            if(url != null && url.isEmpty() && url.substring(0, 8).equals("://baike")){
+                continue;
+                //downloadFile(url, saveDir);
+                //Thread.sleep(3000);
+            }else{
+                //System.out.println(url);
+            }
+        }
     }
 }

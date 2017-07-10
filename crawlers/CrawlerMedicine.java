@@ -21,14 +21,14 @@ import java.net.URLDecoder;
  * The class is written to download web pages from baike medical categories 
  * http://baike.baidu.com/wikitag/taglist?tagId=75954
  */
-public class ChineseMedicineCrawler{
-    //private static final Logger LOGGER = Logger.getLogger(ChineseMedicineCrawler.class);
+public class CrawlerMedicine {
+    //private static final Logger LOGGER = Logger.getLogger(CrawlerMedicine.class);
 
     String urlPost = "http://%s:8080/requests";
-    public static final String saveDir = "/home/wechaty/data/webpages/ChineseMedicine";
+    public static final String saveDir = "/home/wechaty/data/webpages/medicineAndExceptionHandling";
                        
-    public ChineseMedicineCrawler(){}
-    public ChineseMedicineCrawler(String url){
+    public CrawlerMedicine(){}
+    public CrawlerMedicine(String url){
         setUrlPost(url);
     }
     private static final int BUFFER_SIZE = 4096;
@@ -201,87 +201,50 @@ public class ChineseMedicineCrawler{
         //LOGGER.info(response.toString());
         return response.toString();
     }
+
     public static void main(String[] args) throws Exception {
-        ChineseMedicineCrawler sc = new ChineseMedicineCrawler();
-        /*
-        sc.urlPost = String.format(sc.urlPost, args[0]);
-        if (args.length >= 2 && args[1].equalsIgnoreCase("get")) {
-            if (args.length >= 3) {
-                sc.sendGet(args[2]);
-            } else {
-                //sc.sendGet(DataKey.default_bizid);
-            }
-        } else if (args.length == 2 && args[1].equalsIgnoreCase("post")) {
-            sc.sendPost();
-        } else if (args.length == 3 && args[1].equalsIgnoreCase("post")){
-            //LOGGER.info("calling with post " +args[2]);
-            String fname = args[2];
-            // "C:\\Workspace\\prservice\\wxbot_related\\java_tools\\src\\test\\postdata_questions.json";
-            String content = FileUtil.readAllTexts(fname);
-            //Map<String, Object> map = MapUtil.convertJsonToMap(content);
-            sc.msgToSend =content;
-            String res = sc.sendPost();
-            //LOGGER.info("res " + res);
-        } else {
-            //LOGGER.info("Usage: java service.ChineseMedicineCrawler get/post");
-        }
-       */ 
+        CrawlerMedicine sc = new CrawlerMedicine();
         sc.setUrlPost("http://baike.baidu.com/wikitag/api/getlemmas");
         try(PrintWriter nameIdMapFile = new PrintWriter(saveDir + "/nameIdMap.txt")){
             // there are 73 pages in total
             for(int pageNum = 1; pageNum < 74; pageNum++){
-                String s ="limit=100000000000&timeout=3000000&filterTags=%5B%5D&tagId=75956&fromLemma=false&contentLength=4000000000000000&page="+pageNum;
+                String s ="limit=100000000000&timeout=3000000&filterTags=%5B%5D&tagId=75954&fromLemma=false&contentLength=4000000000000000&page="+pageNum;
                 String res = sc.sendPost(s);
                 for(int i = 0; i < res.length()-4; i++){
-                  StringBuilder urlBuilder = new StringBuilder();
-                  if(res.substring(i, i+4).equals("http")){
-                       int j = i+4;
-                       while(res.charAt(j) != '"'){
-                           j++;
-                       }
-                       String url = res.substring(i, j);
-                       for(char c : url.toCharArray()){
-                           if(c != '\\'){
-                               urlBuilder.append(c);
-                           }
-                       }
-                       String urlsClean = urlBuilder.toString();
-                       //String resultPage = sendGet(urlClean);
-		       String[] urls = urlsClean.split("http");
-		       for(String urlClean : urls){
-                   if(urlClean == null || urlClean.isEmpty()) continue;
-                   final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-                   String urlTemp = "http"+urlClean;
-                   Thread.sleep(3000);
-                   downloadFile(urlTemp, saveDir);
-                   /*
-                    * executorService.scheduleAtFixedRate(new Runnable(){
-                       @Override
-                       public void run(){
-                           try {
+                    StringBuilder urlBuilder = new StringBuilder();
+                    if(res.substring(i, i+4).equals("http")){
+                        int j = i+4;
+                        while(res.charAt(j) != '"'){
+                            j++;
+                            }
+                        String url = res.substring(i, j);
+                        for(char c : url.toCharArray()){
+                            if(c != '\\'){
+                                urlBuilder.append(c);
+                                }
+                            }
+                        String urlsClean = urlBuilder.toString();
+                        String[] urls = urlsClean.split("http");
+                        for(String urlClean : urls){
+                            if(urlClean == null || urlClean.isEmpty()) continue;
+                            final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+                            String urlTemp = "http"+urlClean;
+                            Thread.sleep(3000);
+                            try{
                                 downloadFile(urlTemp, saveDir);
-                           }catch(Exception e){
-                               System.out.println("downloadFile failed!");
-                           }
-                       }
-                   }, 0, 30, TimeUnit.SECONDS);
-                   //executorService.scheduleAtFixedRate(App::downloadFile, 0, 1, TimeUnit.SECONDS);
-                   */
-                   String[] urlSplit = urlClean.split("/");
-                   String name = URLDecoder.decode(urlSplit[4], "UTF-8"); 
-                   String id = urlSplit[5]; System.out.println(name+" "+id); 
-                   nameIdMapFile.println(name + " " + id);
-               }
-                  // String toEncode = "";
-                 //  String encoded = URLEncoder.encode(toEncode, "UTF-8");
-                 //  System.out.println("Encoded: " + encoded);
-                  // String encoded = "%E8%89%BE%E6%BB%8B%E7%97%85";
-                   //String decoded = URLDecoder.decode(encoded, "UTF-8");
+                                String[] urlSplit = urlClean.split("/");
+                                //urlSplit[4] index out of boundary exception
+                                String name = URLDecoder.decode(urlSplit[urlSplit.length-2], "UTF-8"); 
+                                String id = urlSplit[urlSplit.length-1];
+                                // System.out.println(name+" "+id); 
+                                nameIdMapFile.println(name + " " + id);
+                            }catch(Exception e){
+                                System.out.println("Can't download file: " + urlTemp);
+                            }
+                        }
                    }
                 }
             }
         }
-         //Writer w = new OutputStreamWriter(new FileOutputStream("test.txt"), "UTF-8");
-         //w.close();
     }
 }

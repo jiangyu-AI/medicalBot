@@ -23,7 +23,8 @@ from collections import OrderedDict
 # extract information from webpages
 def extractInfoFromFile(inDir, fileId):
     # open local file
-    soup = BeautifulSoup(open(inDir + '/' + fileId, encoding = 'utf-8'), 'lxml')
+    filePath = inDir + '/' + fileId
+    soup = BeautifulSoup(open(filePath, encoding = 'utf-8'), 'lxml')
 
     # create a dict to store all the data being pulled from webpages
     data = OrderedDict()
@@ -60,32 +61,27 @@ def extractInfoFromFile(inDir, fileId):
             contentBox = contentBox.find_next_sibling('div',attrs={'class':'para'})
             contentValues.append(contentBox.get_text().strip('/\n').strip(name))
             data[name][contentKey] = '\n'.join(contentValues)
-
     return data
 
-def writeToJson(data, outDir, fileId):
-    # write data to json file
+def writeToJson(data, outDir, fileName):
     #print(fileName)
-    """if not os.path.exists(os.path.dirname(outDir)):
-        try:
-            os.makedirs(os.path.dirname(outDir))
-        except OSError as exc: # guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise
-    """
-
-    filePath = (outDir + '/' + fileId).encode('utf-8')
-    with open(filePath, 'w', encoding='utf-8') as outfile:
+    with open((outDir + '/' + fileName).encode('utf-8'), 'w', encoding='utf-8') as outfile:
         json_text = json.dumps(data, indent=4, ensure_ascii=False)
         outfile.write(json_text)
 
 if __name__ == '__main__':
     # path to baike medical pages in local folder
-    inDir = '/home/jyu/data/baikeMedical/webpages/treatment'
-    outDir = '/home/jyu/data/baikeMedical/jsonFiles/treatment'
-    for fileId in os.listdir(inDir):
-        data = extractInfoFromFile(inDir, fileId)
-        #fileName = list(data.keys())[0]
-        #print(fileName.encode('utf-8'))
-        writeToJson(data, outDir, fileId)
-
+    inDir = '/home/wechaty/data/webpages/disease'
+    outDir = '/home/wechaty/data/jsonFiles/missing/disease'
+    count = 0
+    #testLimit = 10
+    with open("/home/wechaty/data/diseaseMissingFiles.txt".encode('utf-8'), 'r', encoding='utf-8') as f:
+        for line in f:
+            fileId = line.split('/')[-1].strip('/\n')
+           # print(fileId)
+            if fileId.isdigit():
+                count = count + 1
+                print(count)
+                data = extractInfoFromFile(inDir, fileId)
+                fileName = list(data.keys())[0]
+                writeToJson(data, outDir, fileName)

@@ -21,14 +21,14 @@ import java.net.URLDecoder;
  * The class is written to download web pages from baike medical categories 
  * http://baike.baidu.com/wikitag/taglist?tagId=75954
  */
-public class MedicineCrawler {
-    //private static final Logger LOGGER = Logger.getLogger(MedicineCrawler.class);
+public class CrawlerTreatment{
+    //private static final Logger LOGGER = Logger.getLogger(CrawlerTreatment.class);
 
     String urlPost = "http://%s:8080/requests";
-    public static final String saveDir = "/home/jyu/data/baikeMedical/webpages/medicineUpdated2";
+    public static final String saveDir = "/home/wechaty/data/webpages/treatment";
                        
-    public MedicineCrawler(){}
-    public MedicineCrawler(String url){
+    public CrawlerTreatment(){}
+    public CrawlerTreatment(String url){
         setUrlPost(url);
     }
     private static final int BUFFER_SIZE = 4096;
@@ -90,7 +90,7 @@ public class MedicineCrawler {
             outputStream.close();
             inputStream.close();
  
-           // System.out.println("File downloaded");
+            System.out.println("File downloaded");
         } else {
             System.out.println("No file to download. Server replied HTTP code: " + responseCode);
             return 0;
@@ -202,7 +202,7 @@ public class MedicineCrawler {
         return response.toString();
     }
     public static void main(String[] args) throws Exception {
-        MedicineCrawler sc = new MedicineCrawler();
+        CrawlerTreatment sc = new CrawlerTreatment();
         /*
         sc.urlPost = String.format(sc.urlPost, args[0]);
         if (args.length >= 2 && args[1].equalsIgnoreCase("get")) {
@@ -223,14 +223,14 @@ public class MedicineCrawler {
             String res = sc.sendPost();
             //LOGGER.info("res " + res);
         } else {
-            //LOGGER.info("Usage: java service.MedicineCrawler get/post");
+            //LOGGER.info("Usage: java service.CrawlerTreatment get/post");
         }
        */ 
         sc.setUrlPost("http://baike.baidu.com/wikitag/api/getlemmas");
         try(PrintWriter nameIdMapFile = new PrintWriter(saveDir + "/nameIdMap.txt")){
             // there are 73 pages in total
             for(int pageNum = 1; pageNum < 74; pageNum++){
-                String s ="limit=100000000000&timeout=3000000&filterTags=%5B%5D&tagId=75954&fromLemma=false&contentLength=4000000000000000&page="+pageNum;
+                String s ="limit=100000000000&timeout=3000000&filterTags=%5B%5D&tagId=75955&fromLemma=false&contentLength=4000000000000000&page="+pageNum;
                 String res = sc.sendPost(s);
                 for(int i = 0; i < res.length()-4; i++){
                   StringBuilder urlBuilder = new StringBuilder();
@@ -252,10 +252,8 @@ public class MedicineCrawler {
                    if(urlClean == null || urlClean.isEmpty()) continue;
                    final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
                    String urlTemp = "http"+urlClean;
-                  // Thread.sleep(3000);
-                   try{
-                       downloadFile(urlTemp, saveDir);
-                                     
+                   Thread.sleep(3000);
+                   downloadFile(urlTemp, saveDir);
                    /*
                     * executorService.scheduleAtFixedRate(new Runnable(){
                        @Override
@@ -270,16 +268,10 @@ public class MedicineCrawler {
                    //executorService.scheduleAtFixedRate(App::downloadFile, 0, 1, TimeUnit.SECONDS);
                    */
                    String[] urlSplit = urlClean.split("/");
-                   String name = URLDecoder.decode(urlSplit[urlSplit.length - 2], "UTF-8"); 
-                   String id = urlSplit[urlSplit.length - 1]; 
-                   //System.out.println(name+" "+id); 
+                   String name = URLDecoder.decode(urlSplit[4], "UTF-8"); 
+                   String id = urlSplit[5]; System.out.println(name+" "+id); 
                    nameIdMapFile.println(name + " " + id);
-                   }catch(Exception e){
-                       System.out.println("Can't download file: " + urlTemp);
-                   }
-
-              
-		   }
+               }
                   // String toEncode = "";
                  //  String encoded = URLEncoder.encode(toEncode, "UTF-8");
                  //  System.out.println("Encoded: " + encoded);

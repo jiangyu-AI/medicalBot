@@ -25,7 +25,7 @@ public class MedicineCrawler {
     //private static final Logger LOGGER = Logger.getLogger(MedicineCrawler.class);
 
     String urlPost = "http://%s:8080/requests";
-    public static final String saveDir = "/home/jyu/data/baikeMedical/webpages/medicineUpdated2";
+    public static final String saveDir = "/home/wechaty/data/webpages/medicineUpdated2";
                        
     public MedicineCrawler(){}
     public MedicineCrawler(String url){

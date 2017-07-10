@@ -30,6 +30,7 @@ def extractInfoFromFile(inDir, fileId):
     # get the title
     nameBox = soup.find('h1')
     name = nameBox.get_text().strip('/\n')
+    print(name))
     data[name] = OrderedDict()
     # add url
     url = 'http://baike.baidu.com/item/' + name + '/' + fileId
@@ -51,28 +52,53 @@ def extractInfoFromFile(inDir, fileId):
         basicDict[basicItemName] = basicItemValue
     data[name][basic] = basicDict
 
+    debug_file = open("debug_file.txt", 'w', encoding = 'utf-8')
+    debug_file.write("testtest")
+    #debug_file.write(name)
+
     # get the contents
     contentBoxes = soup.find_all('div', attrs={'class':'para-title level-2'})
     for contentBox in contentBoxes:
-        contentKey = contentBox.get_text().strip('/\n').strip(name)
+        contentKey = contentBox.get_text().strip('/\n')#.strip(name)
+        #print(contentKey.encode('utf-8'))
+        if contentKey.encode('utf8')[:len(name.encode('utf8'))] == name.encode('utf8'):
+            contentKey = contentKey[len(name.encode('utf8')):]
+            print(contentKey.encode('utf-8'))
+        debug_file.write("contenKey: " + contentKey + '\n')
+       # print(contentKey.encode("utf-8"))
+
         contentValues = []
         while contentBox.find_next_sibling('div',attrs={'class':'para'}) != None:
             contentBox = contentBox.find_next_sibling('div',attrs={'class':'para'})
-            contentValues.append(contentBox.get_text().strip('/\n').strip(name))
-            data[name][contentKey] = '\n'.join(contentValues)
+            valueCur = contentBox.get_text()
+            debug_file.write(valueCur + '\n')
 
+            valueCurStrip = valueCur.strip('/\n')
+           # debug_file.write(valueCurStrip)
+
+            valueCurStripStrip = valueCurStrip.strip(name)
+         #   debug_file.write(valueCurStripStrip)
+
+            contentValues.append(valueCurStripStrip)
+
+           # contentValues.append(contentBox.get_text().strip('/\n').strip(name))
+
+            data[name][contentKey] = '\n'.join(contentValues)
+           # debug_file.write(contentValues)
+
+    debug_file.close()
     return data
 
 def writeToJson(data, outDir, fileId):
     # write data to json file
     #print(fileName)
-    """if not os.path.exists(os.path.dirname(outDir)):
+    if not os.path.exists(os.path.dirname(outDir)):
+        print("not exist!")
         try:
             os.makedirs(os.path.dirname(outDir))
         except OSError as exc: # guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
-    """
 
     filePath = (outDir + '/' + fileId).encode('utf-8')
     with open(filePath, 'w', encoding='utf-8') as outfile:
@@ -81,8 +107,12 @@ def writeToJson(data, outDir, fileId):
 
 if __name__ == '__main__':
     # path to baike medical pages in local folder
-    inDir = '/home/jyu/data/baikeMedical/webpages/treatment'
-    outDir = '/home/jyu/data/baikeMedical/jsonFiles/treatment'
+
+    # debug http://baike.baidu.com/item/%E6%89%8B%E6%9C%AF%E5%90%8E%E5%8F%8D%E6%B5%81%E6%80%A7%E8%83%83%E7%82%8E/923509
+
+    inDir = '/home/jyu/data/baikeMedical/webpages/treatment/debug'
+    outDir = '/home/jyu/data/baikeMedical/jsonFiles/treatment/debug'
+
     for fileId in os.listdir(inDir):
         data = extractInfoFromFile(inDir, fileId)
         #fileName = list(data.keys())[0]

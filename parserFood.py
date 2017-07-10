@@ -14,6 +14,7 @@ be run.
 import glob
 import os
 import codecs
+import errno
 import json
 import csv
 from bs4 import BeautifulSoup
@@ -66,14 +67,15 @@ def extractInfoFromFile(inDir, fileId):
 def writeToJson(data, outDir, fileId):
     # write data to json file
     #print(fileName)
-    """if not os.path.exists(os.path.dirname(outDir)):
-        try:
-            os.makedirs(os.path.dirname(outDir))
-        except OSError as exc: # guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise
     """
-
+    if os.path.exists(os.path.dirname(outDir)):
+	    print("creating dir")
+	    try:
+		    os.makedirs(os.path.dirname(outDir))
+	    except OSError as exc: # guard against race condition
+		    if exc.errno != errno.EEXIST:
+			    raise
+    """
     filePath = (outDir + '/' + fileId).encode('utf-8')
     with open(filePath, 'w', encoding='utf-8') as outfile:
         json_text = json.dumps(data, indent=4, ensure_ascii=False)
@@ -81,8 +83,9 @@ def writeToJson(data, outDir, fileId):
 
 if __name__ == '__main__':
     # path to baike medical pages in local folder
-    inDir = '/home/jyu/data/baikeMedical/webpages/treatment'
-    outDir = '/home/jyu/data/baikeMedical/jsonFiles/treatment'
+    inDir = '/home/jyu/data/baikeMedical/webpages/food'
+    outDir = '/home/jyu/data/baikeMedical/jsonFiles/food'
+    os.makedirs(outDir, exist_ok=True)
     for fileId in os.listdir(inDir):
         data = extractInfoFromFile(inDir, fileId)
         #fileName = list(data.keys())[0]
