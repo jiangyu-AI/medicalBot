@@ -15,7 +15,7 @@ def extractInfoFromFile(inDir, fileId):
     main_content = soup.find('div', attrs={'class':'main-content'})
 # get title
     name_box = soup.find('h1')
-    name = name_box.get_text().strip('/\n')
+    name = name_box.get_text().strip('\n')
     data[name] = OrderedDict()
 
 # add url
@@ -24,7 +24,7 @@ def extractInfoFromFile(inDir, fileId):
 
 # get summary
     summary_box = soup.find('div', attrs={'class':'lemma-summary'})
-    summary = summary_box.get_text().strip('/\n')
+    summary = summary_box.get_text().strip('\n')
     data[name]['摘要'] = summary
 
 # get basic info
@@ -32,15 +32,15 @@ def extractInfoFromFile(inDir, fileId):
     basic_dic = OrderedDict()
     basic_item_boxes = soup.find_all('dt', attrs={'class':'basicInfo-item name'})
     for basic_item_box in basic_item_boxes:
-        basic_item_key = basic_item_box.get_text().strip('/\n')
-        basic_item_value = basic_item_box.find_next_sibling('dd').get_text().strip('/\n')
+        basic_item_key = basic_item_box.get_text().strip('\n')
+        basic_item_value = basic_item_box.find_next_sibling('dd').get_text().strip('\n')
         basic_dic[basic_item_key] = basic_item_value
     data[name]['基本信息'] = basic_dic
 
 # get content
     content_key_boxes = soup.find_all('div', attrs={'class':'para-title level-2'})
     for content_key_box in content_key_boxes:
-        content_key = content_key_box.get_text().strip('/\n')#.replace(name, '')
+        content_key = content_key_box.get_text().strip('\n')#.replace(name, '')
         if content_key[:len(name)] == name:
             content_key = content_key[len(name):]
         #print(content_key)
@@ -54,10 +54,7 @@ def extractInfoFromFile(inDir, fileId):
             if 'anchor-list' in content_value_box.attrs['class']:
                 content_value_box = content_value_box.find_next_sibling()
                 continue
-            #if not content_value_box.attrs['class'] == ['para-title', 'level-2']:
-            #    break
-            #print(content_value_box.attrs['class'])
-            content_value = content_value_box.get_text().strip('/\n')
+            content_value = content_value_box.get_text().strip('\n')
             if content_value[:len(name)] == name:
                 content_values.append(content_value[len(name):])
             else:
@@ -72,30 +69,13 @@ def writeToJson(data, outDir, fileId):
     filePath = outDir + '/' + fileId
     with open(filePath, 'w') as outfile:
         json.dump(data, outfile, indent=4, ensure_ascii=False)
-        #json_text = json.dumps(data, indent=4, ensure_ascii=False)
-        #outfile.write(json_text)
-
-    #with open(outDir + '/' + fileId, 'r') as json_file:
-    #    data = json.load(json_file)
-    #    print(json.dumps(data, indent=4, ensure_ascii=False))
 
 if __name__ == '__main__':
     # path to baike medical pages in local folder
     #inDirRoot = '/home/jyu/dataTest/baikeMedical/webpages'
     #outDirRoot = '/home/jyu/dataTest/baikeMedical/jsonFiles'
-    inDirRoot = '/home/jyu/data/baikeMedical/webpages'
-    outDirRoot = '/home/jyu/data/baikeMedical/jsonFiles'
-
-
-   # inDir = '/home/jyu/data/baikeMedical/webpages/food'
-   # inDir = '/home/jyu/data/baikeMedical/webpages/psychological'
-   # inDir = '/home/jyu/data/baikeMedical/webpages/bioMedical'
-   # inDir = '/home/jyu/data/baikeMedical/webpages/chemical'
-
-   # outDir = '/home/jyu/data/baikeMedical/jsonFiles/food'
-   # outDir = '/home/jyu/data/baikeMedical/jsonFiles/psychological'
-   # outDir = '/home/jyu/data/baikeMedical/jsonFiles/bioMedical'
-   # outDir = '/home/jyu/data/baikeMedical/jsonFiles/chemical'
+    inDirRoot = '/home/jyu/data/baikeThird/science'
+    outDirRoot = '/home/jyu/data/baikeThird/jsonFiles'
 
     os.makedirs(outDirRoot, exist_ok=True)
     inDirs = [x[0] for x in os.walk(inDirRoot)]
@@ -103,6 +83,8 @@ if __name__ == '__main__':
         outDir = outDirRoot + '/' + inDir.split('/')[-1]
         os.makedirs(outDir, exist_ok=True)
         for fileId in os.listdir(inDir):
+            if fileId.endswith('.txt'):
+                continue
             data = extractInfoFromFile(inDir, fileId)
             writeToJson(data, outDir, fileId)
 

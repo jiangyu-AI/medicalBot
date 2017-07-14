@@ -1,3 +1,30 @@
+matches between baike names and wiki labels
+
+413 matches_by_nameEn.txt
+1638 matches_by_nameCh.txt
+matches ratio: by nameCh
+>>> 1638/24382
+0.0671807070789927
+
+baike sstats:
+count_total: 24382 baikeMedical/names_id.txt
+ratio having Englsh name: < 6%
+
+wiki stats:
+count_total: 27827809 wiki/labels_id.txt
+count_label_zh: 1528208
+count_label_en: 16616047
+ratio having label_zh: 0.05491657446274069
+ratio having label_en: 0.5971022153737574
+
+
+
+
+great Traditional Chinese and simplified Chinese converter: 
+
+https://pypi.python.org/pypi/hanziconv
+
+
 # medicalBot
 5 July: map id between wiki data and baiduBaike data
 
