@@ -34,7 +34,7 @@ from urllib.request import urlopen
 max_page_num = str(500) # 1 for testing
 
 URL_ROOT = 'http://baike.baidu.com/science'
-OUT_DIR_ROOT = '/home/jyu/data/baikeThird/science'
+OUT_DIR_ROOT = '/home/jyu/data/baikeFourth/science'
 
 #visited = set()
 # create queue
@@ -83,9 +83,9 @@ for tag in soup.find_all('h4'):
         url = url_pre + tagId
         soup = BeautifulSoup(url, 'html5lib')
         lemma_num = soup.find('div', class_='lemma_num')
-       lemma_nums.add(title + ' ' + lemma_num)
+        lemma_nums.add(title + ' ' + lemma_num)
 
- with open('lemma_nums.txt','a') as f:
+with open('lemma_nums.txt','a') as f:
     f.write(''.join(lemma_nums))
     #else:
         # add subcategories i.e. without tagId into queue for further processing

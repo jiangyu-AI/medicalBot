@@ -1,0 +1,7 @@
+ctr u   half page up
+ctr d   half page down
+ctr f  page forward
+ctr b  page back
+
+#  previous same word
+*  next same word

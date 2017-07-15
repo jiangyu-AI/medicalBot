@@ -4,9 +4,8 @@ import json
 from collections import OrderedDict
 from bs4 import BeautifulSoup
 
-def extractInfoFromFile(inDir, fileId):
-    file_path = inDir + '/' + fileId
-    with open(file_path) as f:
+def extractInfoFromFile(path_html):
+    with open(path_html) as f:
         soup = BeautifulSoup(f, 'html5lib')
 #print(soup.prettify())
 
@@ -19,7 +18,7 @@ def extractInfoFromFile(inDir, fileId):
     data[name] = OrderedDict()
 
 # add url
-    url = 'http://baike.baidu.com/item/' + name + '/' + fileId
+    url = 'http://baike.baidu.com/item/' + name + '/' + path_html.split('/')[-1] 
     data[name]['url'] = url
 
 # get summary
@@ -65,26 +64,24 @@ def extractInfoFromFile(inDir, fileId):
     return data
 
 
-def writeToJson(data, outDir, fileId):
-    filePath = outDir + '/' + fileId
-    with open(filePath, 'w') as outfile:
+def writeToJson(data, path_json):
+    dir_out = os.path.dirname(path_json)
+    os.makedirs(dir_out, exist_ok=True)
+    with open(path_json, 'w') as outfile:
         json.dump(data, outfile, indent=4, ensure_ascii=False)
 
 if __name__ == '__main__':
-    # path to baike medical pages in local folder
-    #inDirRoot = '/home/jyu/dataTest/baikeMedical/webpages'
-    #outDirRoot = '/home/jyu/dataTest/baikeMedical/jsonFiles'
-    inDirRoot = '/home/jyu/data/baikeThird/science'
-    outDirRoot = '/home/jyu/data/baikeThird/jsonFiles'
+    # path to baike webpages in local folder
+    dir_in = '/home/jyu/data/baike/webpages'
+    dir_out = '/home/jyu/data/baike/jsonFiles2'
+    os.makedirs(dir_out, exist_ok=True)
 
-    os.makedirs(outDirRoot, exist_ok=True)
-    inDirs = [x[0] for x in os.walk(inDirRoot)]
-    for inDir in inDirs[1:]:
-        outDir = outDirRoot + '/' + inDir.split('/')[-1]
-        os.makedirs(outDir, exist_ok=True)
-        for fileId in os.listdir(inDir):
-            if fileId.endswith('.txt'):
+    for root, dirs, files in os.walk(dir_in):
+        for file_name in files:
+            if file_name.endswith('.txt'):
                 continue
-            data = extractInfoFromFile(inDir, fileId)
-            writeToJson(data, outDir, fileId)
+            path_html = os.path.join(root, file_name)
+            path_json = path_html.replace(dir_in, dir_out, 1)
+            data = extractInfoFromFile(path_html)
+            writeToJson(data, path_json)
 

@@ -1,3 +1,13 @@
+import java.io.File;
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.Queue;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Set;
+import java.util.HashSet;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.util.*;
@@ -51,6 +61,7 @@ public class Crawler{
     private static final int BUFFER_SIZE = 4096;
     private static final String DOWNLOAD_ERROR_FILE = "downloadFailed.txt";
     private static final String DOWNLOAD_STATS_FILE = "downloadStats.txt";
+    private static final String VISITED_FILE = "/home/jyu/data/baike/visited.txt";
                        
     public Crawler(){}
     public Crawler(String url){
@@ -345,6 +356,100 @@ public class Crawler{
 	}
 
 
+    private static List<String> getUrlsBfs(String url_start){
+
+	List<String> urls = new LinkedList<>();
+        // timeout connection after 500 miliseconds
+        System.setProperty("sun.net.client.defaultConnectTimeout", "500");
+        System.setProperty("sun.net.client.defaultReadTimeout",    "1000");
+
+        // list of web pages to be examined
+        Queue<String> queue = new LinkedList<String>();
+        queue.add(url_start);
+
+        // set of examined web pages
+        Set<String> marked = new HashSet<String>();
+        marked.add(url_start);
+
+        // breadth first search crawl of web
+        while (!queue.isEmpty()) {
+            String v = queue.remove();
+            System.out.println(v);
+
+            String input = null;
+            try {
+                In in = new In(v);
+                input = in.readAll();
+            }
+            catch (IllegalArgumentException e) {
+                System.out.println("[could not open " + v + "]");
+                continue;
+            }
+            // if (input == null) continue;
+
+           /*************************************************************
+            *  Find links of the form: http://xxx.yyy.zzz
+            *  \\w+ for one or more alpha-numeric characters
+            *  \\. for dot
+            *  could take first two statements out of loop
+            *************************************************************/
+            //String regexp = "http://(\\w+\\.)+(\\w+)";
+	    //String regexp = "/item/(%\\w\\w)+";
+            String regexp = "/item/(%\\w\\w)+(\\/\\d+)?";
+            Pattern pattern = Pattern.compile(regexp);
+
+            Matcher matcher = pattern.matcher(input);
+
+            // find and print all matches
+            while (matcher.find()) {
+                String w = matcher.group();
+		String newUrl = "http://baike.baidu.com" + w;
+                if (!marked.contains(w)) {
+                    //queue.add(w);
+                    //marked.add(w);
+		    urls.add(newUrl);
+                }
+            }
+
+        }
+	return urls;
+    }
+
+    private static Set<String> getVisited(String visitedFile){
+	    Set<String> visited = new HashSet<>();
+	    try{
+		    FileReader fr = new FileReader(VISITED_FILE);
+		    BufferedReader br = new BufferedReader(fr);
+		    try{
+			    String line = br.readLine();
+			    while(line != null){
+				    visited.add(line.trim());
+				    line = br.readLine();
+			    }
+		    }finally{
+			    br.close();
+		    }
+	    }catch(IOException e){
+		    System.out.println("visited file not exists!");
+	    }
+	    return visited;
+    }
+
+    private static void saveVisited(Set<String> urls){
+	    try{
+		    FileWriter fw = new FileWriter(VISITED_FILE, true);
+		    BufferedWriter out = new BufferedWriter(fw);
+		    Iterator it = urls.iterator();
+		    while(it.hasNext()){
+			    out.write(it.next()+"\n");
+		    }
+		    out.close();
+	    }catch(IOException e){
+		    System.out.println("can't write to visited file");
+            }
+    }
+
+
     public static void main(String[] args) throws Exception {
         Crawler crawler = new Crawler();
         crawler.setUrlPost(REQUEST_URL);
@@ -369,15 +474,22 @@ public class Crawler{
         writeToFile(urls, saveDir+"/urls.txt");
         writeToFile(nameIds, saveDir+"/nameIdMap.txt");
 
+	Set<String> visited = getVisited(VISITED_FILE);
+
         // download webpages
 	int count_attempt = 0;
 	int count_downloaded = 0;
-        for(String url : urls){
-		count_attempt = count_attempt + 1;
-		System.out.println("Downloading url: " + url);
-		System.out.println("Saving page to saveDir: " + saveDir);
-                count_downloaded += downloadFile(url, saveDir);
-                Thread.sleep(SLEEP_TIME_MS);
+        for(String url_start : urls){
+		List<String> urlsBfs = getUrlsBfs(url_start);
+		for(String url : urlsBfs){
+			if(visited.contains(url)) continue;
+			visited.add(url);
+			count_attempt = count_attempt + 1;
+			System.out.println("Downloading url: " + url);
+			System.out.println("Saving page to saveDir: " + saveDir);
+			count_downloaded += downloadFile(url, saveDir);
+			Thread.sleep(SLEEP_TIME_MS);
+		}
            // }else{
                 //System.out.println("main: " + url);
             //}
@@ -386,5 +498,6 @@ public class Crawler{
 	        + "saveDir: " + saveDir + " "	
 		+ "Attempts: " +  count_attempt + " " + "Downloaded:" + count_downloaded + "\n";
         appendToFile(counts, DOWNLOAD_STATS_FILE);
+	saveVisited(visited);
     }
 }
