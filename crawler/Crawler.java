@@ -59,8 +59,8 @@ public class Crawler{
     private static String urlPost = "http://%s:8080/requests";
     private static final String REQUEST_URL = "http://baike.baidu.com/wikitag/api/getlemmas";
     private static final int BUFFER_SIZE = 4096;
-    private static final String DOWNLOAD_ERROR_FILE = "downloadFailed.txt";
-    private static final String DOWNLOAD_STATS_FILE = "downloadStats.txt";
+    private static final String DOWNLOAD_ERROR_FILE = "/home/jyu/data/baike/downloadFailed.txt";
+    private static final String DOWNLOAD_STATS_FILE = "/home/jyu/data/baike/downloadStats.txt";
     private static final String VISITED_FILE = "/home/jyu/data/baike/visited.txt";
                        
     public Crawler(){}
@@ -395,7 +395,7 @@ public class Crawler{
             *************************************************************/
             //String regexp = "http://(\\w+\\.)+(\\w+)";
 	    //String regexp = "/item/(%\\w\\w)+";
-            String regexp = "/item/(%\\w\\w)+(\\/\\d+)?";
+            String regexp = "/item/[-%\\w]+(\\/\\d+)?";
             Pattern pattern = Pattern.compile(regexp);
 
             Matcher matcher = pattern.matcher(input);

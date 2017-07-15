@@ -1,4 +1,3 @@
-// A minimal Web Crawler written in Java
 // Usage: From command line 
 //     java WebCrawler <URL> [N]
 //  where URL is the url to start the crawl, and N (optional)
