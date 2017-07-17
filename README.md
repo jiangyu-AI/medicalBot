@@ -1,3 +1,55 @@
+1st floor printer: 
+10.3.5.52
+
+
+
+17765
+
+航空航天 
+(共463个)汽车工程 
+(共1341个)生物医学 
+(共251个)环境科学 
+(共497个)气象科技 
+(共295个)水产养殖 
+(共1479个)食品科技 
+(共1075个)通信科技 
+(共3634个)水利科学 
+(共1382个)核能利用 
+(共1351个)体育科学 
+(共1391个)力学 
+(共1042个)化工科技 
+(共1754个)电子信息 
+(共1810个)心理健康 
+(共935个)
+
+
+
+
+baike science data is completed: 
+location: 228   /home/jyu/data/baike/ 
+number of files:  40605
+size: 3.4G (html)  316M jsonfiles
+
+
+
+
+
+num of files in science:
+[463, 1340, 251, 497, 295, 1478, 1072, 3630, 1382, 1350, 1388, 1040, 1754, 1807, 933, 7251, 8155, 4105, 2417]
+>>> sum(nums)
+40608
+jyu@yu:~/workspace/medicalBot$ find ~/data/baikeFive/science/. -type f | wc -l
+40662
+
+find /home/jyu/data/baikeFive/jsonFiles0/. -type f |wc -l
+40605
+
+num of files in bfs new files: 
+wc -l /home/jyu/data/baikeFive/urlsBfsNew.txt
+78975 /home/jyu/data/baikeFive/urlsBfsNew.txt
+
+
+
 matches between baike names and wiki labels
 
 413 matches_by_nameEn.txt
@@ -90,6 +142,7 @@ http://baike.baidu.com/wikitag/taglist?tagId=75956
 http://baike.baidu.com/wikitag/taglist?tagId=75955
 科学百科诊疗方法分类(共2418个)
 
+In total: 21930
 
 2,
 

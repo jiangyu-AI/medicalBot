@@ -59,9 +59,10 @@ public class Crawler{
     private static String urlPost = "http://%s:8080/requests";
     private static final String REQUEST_URL = "http://baike.baidu.com/wikitag/api/getlemmas";
     private static final int BUFFER_SIZE = 4096;
-    private static final String DOWNLOAD_ERROR_FILE = "/home/jyu/data/baike/downloadFailed.txt";
-    private static final String DOWNLOAD_STATS_FILE = "/home/jyu/data/baike/downloadStats.txt";
-    private static final String VISITED_FILE = "/home/jyu/data/baike/visited.txt";
+    private static final String DOWNLOAD_ERROR_FILE = "/home/jyu/data/baikeFive/downloadFailed.txt";
+    private static final String DOWNLOAD_STATS_FILE = "/home/jyu/data/baikeFive/downloadStats.txt";
+    private static final String VISITED_FILE = "/home/jyu/data/baikeFive/visited.txt";
+    private static final String URLS_BFS_FILE = "/home/jyu/data/baikeFive/urlsBfs.txt";
                        
     public Crawler(){}
     public Crawler(String url){
@@ -356,9 +357,9 @@ public class Crawler{
 	}
 
 
-    private static List<String> getUrlsBfs(String url_start){
+    private static Set<String> getUrlsBfs(String url_start){
 
-	List<String> urls = new LinkedList<>();
+	Set<String> urls = new HashSet<>();
         // timeout connection after 500 miliseconds
         System.setProperty("sun.net.client.defaultConnectTimeout", "500");
         System.setProperty("sun.net.client.defaultReadTimeout",    "1000");
@@ -449,6 +450,20 @@ public class Crawler{
             }
     }
 
+    private static void saveUrlsBfs(List<String> urlsBfsOnelevel){
+	    try{
+		    FileWriter fw = new FileWriter(URLS_BFS_FILE, true);
+		    BufferedWriter out = new BufferedWriter(fw);
+		    Iterator it = urlsBfsOnelevel.iterator();
+		    while(it.hasNext()){
+			    out.write(it.next()+"\n");
+		    }
+		    out.close();
+	    }catch(IOException e){
+		    System.out.println("can't write to urlsBfsOnelevel file");
+            }
+    }
+
 
     public static void main(String[] args) throws Exception {
         Crawler crawler = new Crawler();
@@ -469,6 +484,7 @@ public class Crawler{
         List<String> responses = getPostRequestResponses(crawler, tagId, MAX_PAGE_NUM);
         List<String> urls = getUrls(responses);
         List<String> nameIds = getNameIds(urls);
+	List<String> urlsBfsOnelevel = new LinkedList<String>();
         
         writeToFile(responses, saveDir+"/responses.txt");
         writeToFile(urls, saveDir+"/urls.txt");
@@ -480,16 +496,30 @@ public class Crawler{
 	int count_attempt = 0;
 	int count_downloaded = 0;
         for(String url_start : urls){
-		List<String> urlsBfs = getUrlsBfs(url_start);
+		Set<String> urlsBfs = getUrlsBfs(url_start);
 		for(String url : urlsBfs){
-			if(visited.contains(url)) continue;
-			visited.add(url);
+			String[] urlSplit = url.split("/");
+			if(urlSplit.length < 4){
+			       System.out.println("Wired: url split len < 4: " + url_start);	
+			}else{
+				String doc_title = url.split("/")[4];
+			        if(!visited.contains(doc_title)){
+			        	urlsBfsOnelevel.add(url);
+				}
+			}
+			String[] url_startSplit = url_start.split("/");
+			if(url_startSplit.length < 4){
+			       System.out.println("Wired: url split len < 4: " + url_start);	
+			}else{
+				visited.add(url_startSplit[4]);
+			}
 			count_attempt = count_attempt + 1;
-			System.out.println("Downloading url: " + url);
+			System.out.println("Downloading url: " + url_start);
 			System.out.println("Saving page to saveDir: " + saveDir);
-			count_downloaded += downloadFile(url, saveDir);
+			count_downloaded += downloadFile(url_start, saveDir);
 			Thread.sleep(SLEEP_TIME_MS);
 		}
+	//	}
            // }else{
                 //System.out.println("main: " + url);
             //}
@@ -499,5 +529,6 @@ public class Crawler{
 		+ "Attempts: " +  count_attempt + " " + "Downloaded:" + count_downloaded + "\n";
         appendToFile(counts, DOWNLOAD_STATS_FILE);
 	saveVisited(visited);
+	saveUrlsBfs(urlsBfsOnelevel);
     }
 }

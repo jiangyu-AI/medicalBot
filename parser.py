@@ -72,8 +72,8 @@ def writeToJson(data, path_json):
 
 if __name__ == '__main__':
     # path to baike webpages in local folder
-    dir_in = '/home/jyu/data/baike/webpages'
-    dir_out = '/home/jyu/data/baike/jsonFiles2'
+    dir_in = '/home/jyu/data/baikeFive/science'
+    dir_out = '/home/jyu/data/baikeFive/jsonFiles'
     os.makedirs(dir_out, exist_ok=True)
 
     for root, dirs, files in os.walk(dir_in):
