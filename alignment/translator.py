@@ -4,6 +4,9 @@ import time
 import requests
 import json 
 
+MEDICAL_ITITLE_NAMES = '/home/jyu/data/baike/medical_title_names.txt'
+MEDICAL_NAME_TITLES = '/home/jyu/data/baike/medical_name_titles.txt'
+BAIKE_TITLE_TRANSLATION = '/home/jyu/data/baike/baike_title_trans.txt'
 def write_to_file(data, file_path):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, 'w') as f:
@@ -24,11 +27,6 @@ def translate(query):
     for res_raw in res_raw_list:
         result.append(res_raw['src'] + ' = ' + res_raw['dst'])
     return result
-
-
-MEDICAL_ITITLE_NAMES = '/home/jyu/data/baike/medical_title_names.txt'
-MEDICAL_NAME_TITLES = '/home/jyu/data/baike/medical_name_titles.txt'
-BAIKE_TITLE_TRANSLATION = '/home/jyu/data/baike/baike_title_trans.txt'
 
 def translate_titles(MEDICAL_TITLE_NAMES):
     # map different names to titles of baike medical
@@ -126,7 +124,6 @@ for item in collection:
     names_umls.append(names)
 
 write_to_file(names_umls, '/home/jyu/data/names_umls.txt')
-
 '''
 num_char_per_query = 1000
 chunks = [titles_zh[x:x+num_char_per_query] for x in range(0, len(titles_zh), num_char_per_query)]
@@ -140,6 +137,4 @@ for chunk in chunks:
     print(res)
 
 write_to_file(names, '/home/jyu/data/baike_title_trans.txt')
-
-
 '''
